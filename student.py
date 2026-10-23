@@ -13,6 +13,15 @@ def toy_model(messages):
                 "arguments": {}
                 }
             }
+    elif messages[-1]['role'] == 'user' and '天气' in messages[-1]['content']:
+        return {
+            "role": "assistant",
+            "content": None,
+            "tool_call":{
+                "name": "get_weather",
+                "arguments": {'city': '佛山'}
+            }
+        }
     else:
         return {
             "role": "assistant", 
@@ -22,7 +31,12 @@ def toy_model(messages):
 def get_time():
     return "现在是下午茶时间"
 
-tools = {"get_time": get_time}
+def get_weather(city):
+    return f"{city}: 晴， 25°C "
+
+tools = {
+    "get_time": get_time,
+    "get_weather": get_weather}
 
 while True:
     reply = toy_model(messages)
@@ -38,4 +52,5 @@ while True:
     else:
         break
 
-print(messages)
+for msg in messages:
+    print(msg)
