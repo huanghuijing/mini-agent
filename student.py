@@ -19,23 +19,23 @@ def toy_model(messages):
             "content": "收到:" + messages[-1]['content']
             }
 
-reply = toy_model(messages)
-messages.append(reply)
-
 def get_time():
     return "现在是下午茶时间"
 
 tools = {"get_time": get_time}
 
-while reply.get('tool_call'):
-    tool_call = reply['tool_call']
-    tool_result = tools[tool_call['name']](**tool_call['arguments'])
-    messages.append({
-        "role": "tool",
-        "name": tool_call['name'],
-        "content": tool_result
-        })
+while True:
     reply = toy_model(messages)
     messages.append(reply)
+    if reply.get('tool_call'):
+        tool_call = reply['tool_call']
+        tool_result = tools[tool_call['name']](**tool_call['arguments'])
+        messages.append({
+            'role': 'tool',
+            'name': tool_call['name'],
+            'content': tool_result
+        })
+    else:
+        break
 
 print(messages)
