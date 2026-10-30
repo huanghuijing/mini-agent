@@ -3,39 +3,45 @@ messages = [
     {'role': 'user', 'content': '现在几点了，天气怎么样'}
     ]
 
-def toy_model(messages):
+tool_schemas = [
+    {
+        "name": "get_time",
+        "description": "获取当前时间",
+        "parameters": {
+            "type": "object",
+            "properties": {}
+        }
+    },
+    {
+        "name": "get_weather",
+        "description": "获取天气",
+        "parameters": {
+            "type": "object",
+            "properties": {"city": {"type": "string", "description": "城市"}}
+        }
+    }
+]
+
+def toy_model(messages, tool_schemas):
     if messages[-1]['role'] == 'user' and '几点' in messages[-1]['content'] and '天气' in messages[-1]['content']:
         return {
             "role": "assistant",
             "content": None,
-            "tool_call": [
-                {
-                    "name": "get_time",
-                    "arguments": {}
-                    }, 
-                {
-                    "name": "get_weather",
-                    "arguments": {'city': '佛山'}
-                    }
+            "tool_call": [{"name": tool_schemas[0]['name'], "arguments": {}},
+            {"name": tool_schemas[1]['name'], "arguments": {"city": "佛山"}}
             ]
         }
     elif messages[-1]['role'] == 'user' and '天气' in messages[-1]['content']:
         return {
             "role": "assistant",
             "content": None,
-            "tool_call":[{
-                "name": "get_weather",
-                "arguments": {'city': '佛山'}
-            }]
+            "tool_call":[{"name": tool_schemas[1]['name'], "arguments": {"city": "佛山"}}]
         }
     elif messages[-1]["role"] == "user" and '几点' in messages[-1]['content']:
         return {
             "role": "assistant", 
             "content": None, 
-            "tool_call": [{
-                "name": "get_time", 
-                "arguments": {}
-                }]
+            "tool_call": [{"name": tool_schemas[0]['name'], "arguments": {}}]
             }
     else:
         return {
@@ -54,23 +60,17 @@ tools = {
     "get_weather": get_weather}
 
 while True:
-    reply = toy_model(messages)
+    reply = toy_model(messages, tool_schemas)
     messages.append(reply)
     if reply.get('tool_call'):
         for tool_call in reply['tool_call']:
             tool_result = tools[tool_call['name']](**tool_call['arguments'])
             messages.append({   
                 'role': 'tool',
-                'name': tool_call['name'],  # 工具名称
-                'content': tool_result  # 工具结果          
+                'name': tool_call['name'],  
+                'content': tool_result        
             })
-        # tool_call = reply['tool_call']
-        # tool_result = tools[tool_call['name']](**tool_call['arguments'])
-        # messages.append({
-        #     'role': 'tool',
-        #     'name': tool_call['name'],
-        #     'content': tool_result
-        # })
+
     else:
         break
 
