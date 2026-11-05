@@ -35,25 +35,30 @@ def toy_model(messages, tool_schemas):
 
 max_step = 5
 steps = 0
+
+def execute_tool_calls(tool_calls:list, impls:dict) -> list:
+    results = []
+    for tool in tool_calls:
+        name = tool['name']
+        args = tool.get('arguments',{})
+        try:
+            content = impls[name](**args)
+        except Exception as e:
+            content = f'Impl异常: {e}'
+        results.append({
+            'role' : 'tool',
+            'name' : name,
+            'content' : str(content)
+        })
+    return results
+
 while steps < max_step:
     steps += 1
     reply = toy_model(messages, tool_schemas)
     messages.append(reply)
     if reply.get('tool_call'):
-        for tool_call in reply['tool_call']:
-            try:
-                tool_result = impls[tool_call['name']](**tool_call['arguments'])
-                messages.append({   
-                    'role': 'tool',
-                    'name': tool_call['name'],  
-                    'content': tool_result        
-                })
-            except Exception as e:
-                messages.append({
-                    'role': 'tool',
-                    'name': tool_call['name'], 
-                    'content': f'Impl异常: {e}'
-                })
+        for msg in execute_tool_calls(reply['tool_call'], impls):
+            messages.append(msg)
     else:
         break
 
