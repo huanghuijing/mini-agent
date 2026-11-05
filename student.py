@@ -55,7 +55,7 @@ def get_time():
 def get_weather(city):
     return f"{city}: 晴， 25°C "
 
-tools = {
+impls = {
     "get_time": get_time,
     "get_weather": get_weather}
 
@@ -64,13 +64,19 @@ while True:
     messages.append(reply)
     if reply.get('tool_call'):
         for tool_call in reply['tool_call']:
-            tool_result = tools[tool_call['name']](**tool_call['arguments'])
-            messages.append({   
-                'role': 'tool',
-                'name': tool_call['name'],  
-                'content': tool_result        
-            })
-
+            try:
+                tool_result = impls[tool_call['name']](**tool_call['arguments'])
+                messages.append({   
+                    'role': 'tool',
+                    'name': tool_call['name'],  
+                    'content': tool_result        
+                })
+            except Exception as e:
+                messages.append({
+                    'role': 'tool',
+                    'name': tool_call['name'], 
+                    'content': f'Impl异常: {e}'
+                })
     else:
         break
 
