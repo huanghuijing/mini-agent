@@ -59,7 +59,10 @@ impls = {
     "get_time": get_time,
     "get_weather": get_weather}
 
-while True:
+max_step = 5
+steps = 0
+while steps < max_step:
+    steps += 1
     reply = toy_model(messages, tool_schemas)
     messages.append(reply)
     if reply.get('tool_call'):
@@ -79,6 +82,12 @@ while True:
                 })
     else:
         break
+
+if steps >= max_step and messages[-1].get('tool_call'):
+    messages.append({
+        'role': 'assistant',
+        'content': f'达到步数上限（max_step={max_step}），已停下'
+    })
 
 for msg in messages:
     print(msg)
