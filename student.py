@@ -32,41 +32,45 @@ def toy_model(messages, tool_schemas):
             "role": "assistant", 
             "content": "收到:" + messages[-1]['content']
             }
-
-max_step = 5
-steps = 0
-
+    
 def execute_tool_calls(tool_calls:list, impls:dict) -> list:
-    results = []
-    for tool in tool_calls:
-        name = tool['name']
-        args = tool.get('arguments',{})
-        try:
-            content = impls[name](**args)
-        except Exception as e:
-            content = f'Impl异常: {e}'
-        results.append({
-            'role' : 'tool',
-            'name' : name,
-            'content' : str(content)
+        results = []
+        for tool in tool_calls:
+            name = tool['name']
+            args = tool.get('arguments',{})
+            try:
+                content = impls[name](**args)
+            except Exception as e:
+                content = f'Impl异常: {e}'
+            results.append({
+                'role' : 'tool',
+                'name' : name,
+                'content' : str(content)
+            })
+        return results
+
+def run_agent(messages, tool_schemas, impls, max_step=5):
+    steps = 0
+    
+    while steps < max_step:
+        steps += 1
+        reply = toy_model(messages, tool_schemas)
+        messages.append(reply)
+        if reply.get('tool_call'):
+            for msg in execute_tool_calls(reply['tool_call'], impls):
+                messages.append(msg)
+        else:
+            break
+
+    if steps >= max_step and messages[-1].get('tool_call'):
+        messages.append({
+            'role': 'assistant',
+            'content': f'达到步数上限（max_step={max_step}），已停下'
         })
-    return results
 
-while steps < max_step:
-    steps += 1
-    reply = toy_model(messages, tool_schemas)
-    messages.append(reply)
-    if reply.get('tool_call'):
-        for msg in execute_tool_calls(reply['tool_call'], impls):
-            messages.append(msg)
-    else:
-        break
+    return messages
 
-if steps >= max_step and messages[-1].get('tool_call'):
-    messages.append({
-        'role': 'assistant',
-        'content': f'达到步数上限（max_step={max_step}），已停下'
-    })
+messages = run_agent(messages, tool_schemas, impls)
 
 for msg in messages:
     print(msg)
