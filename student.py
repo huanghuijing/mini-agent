@@ -1,26 +1,10 @@
+from tool_schemas import tool_schemas
+from impls import impls
+
 messages = [
     {'role': 'system', 'content': '回复要使用中文'},
     {'role': 'user', 'content': '现在几点了，天气怎么样'}
     ]
-
-tool_schemas = [
-    {
-        "name": "get_time",
-        "description": "获取当前时间",
-        "parameters": {
-            "type": "object",
-            "properties": {}
-        }
-    },
-    {
-        "name": "get_weather",
-        "description": "获取天气",
-        "parameters": {
-            "type": "object",
-            "properties": {"city": {"type": "string", "description": "城市"}}
-        }
-    }
-]
 
 def toy_model(messages, tool_schemas):
     if messages[-1]['role'] == 'user' and '几点' in messages[-1]['content'] and '天气' in messages[-1]['content']:
@@ -48,16 +32,6 @@ def toy_model(messages, tool_schemas):
             "role": "assistant", 
             "content": "收到:" + messages[-1]['content']
             }
-
-def get_time():
-    return "现在是下午茶时间"
-
-def get_weather(city):
-    return f"{city}: 晴， 25°C "
-
-impls = {
-    "get_time": get_time,
-    "get_weather": get_weather}
 
 max_step = 5
 steps = 0
