@@ -50,8 +50,9 @@ def execute_tool_calls(tool_calls:list, impls:dict) -> list:
         return results
 
 def run_agent(messages, tool_schemas, impls, max_step=5):
+    messages = list(messages)
     steps = 0
-    
+
     while steps < max_step:
         steps += 1
         reply = toy_model(messages, tool_schemas)
@@ -70,7 +71,7 @@ def run_agent(messages, tool_schemas, impls, max_step=5):
 
     return messages
 
-messages = run_agent(messages, tool_schemas, impls)
-
-for msg in messages:
-    print(msg)
+if __name__ == '__main__':
+    final = run_agent(messages, tool_schemas, impls)
+    for msg in final:
+        print(msg)
